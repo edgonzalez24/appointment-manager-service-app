@@ -1,0 +1,44 @@
+# The version of the Docker Compose file format. '3' is the latest major version.
+version: '3'
+
+# Defines the services that make up your app. These services are the containers that will be run when you run `docker-compose up`.
+services:
+  # The name of the first service. This will be the name of the container that is created.
+  db:
+    # The Docker image to use for this service. In this case, it's the version 14.3 of the official PostgreSQL image.
+    image: postgres:15.3
+    # The restart policy for this service. 'always' means the service will always restart until it is explicitly stopped.
+    restart: always
+    # The ports that are exposed by this service. The format is <host-port>:<container-port>.
+    ports:
+      - ${PG_PORT}:${PG_PORT}
+      # Environment variables that are added to the service. These are used by the PostgreSQL image to configure the database.
+    # Environment variables that are added to the service. These are used by the PostgreSQL image to configure the database.
+    environment:
+      - POSTGRES_USER=${PG_USER}
+      - POSTGRES_PASSWORD=${PG_PASSWORD}
+      - POSTGRES_DB=${PG_DB}
+
+    # The name of the container that is created for this service.
+    container_name: ${DOCKER_CONTAINER_NAME}
+    # The volumes that are mounted to this service. The format is <host-path>:<container-path>.
+    # In this case, the './postgres' directory from the host is mounted to '/var/lib/postgresql/data' in the container.
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+  
+  pdAdmin:
+    image: dpage/pgadmin4
+    container_name: ${DOCKER_PGADMIN_CONTAINER_NAME}
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - ${PGADMIN_PORT}:80
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+    volumes:
+      - ./pgadmin:/var/lib/pgadmin
+      - ./pgadmin:/certs/server.cert
+      - ./pgadmin:/certs/server.key
+      - ./pgadmin:/pgadmin4/servers.json
